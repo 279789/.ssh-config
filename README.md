@@ -1,51 +1,101 @@
 <!---
 {
-  "depends_on": [],
+  "depends_on": ["SSH"],
   "author": "Stephan Bökelmann",
-  "first_used": "2025-03-17",
-  "keywords": ["learning", "exercises", "education", "practice"]
+  "first_used": "2025-04-03",
+  "keywords": ["SSH", "config", "IdentityFile", "Host alias"]
 }
 --->
 
-# Learning Through Exercises
+# Using SSH Config Files to Manage Connections
 
 ## 1) Introduction
-Learning by doing is one of the most effective methods to acquire new knowledge and skills. Rather than passively consuming information, actively engaging in problem-solving fosters deeper understanding and long-term retention. By working through structured exercises, students can grasp complex concepts in a more intuitive and applicable way. This approach is particularly beneficial in technical fields like programming, mathematics, and engineering.
+Once you've generated and installed your SSH key pair, you'll likely find yourself connecting to several remote servers—perhaps daily. Typing full commands like `ssh -i ~/.ssh/my-special-key.pem user@192.168.178.24 -p 2234` can become tedious and error-prone. To streamline your workflow, OpenSSH provides a powerful yet underused tool: the `~/.ssh/config` file.
 
-### 1.1) Further Readings and Other Sources
-- [The Importance of Practice in Learning](https://www.sciencedirect.com/science/article/pii/S036013151300062X)
-- "The Art of Learning" by Josh Waitzkin
-- [How to Learn Effectively: 5 Key Strategies](https://www.edutopia.org/article/5-research-backed-learning-strategies)
+This file allows you to define **per-host settings** like:
+- Default usernames
+- Ports
+- Hostnames
+- Identity files
+- Proxy settings
+- KeepAlive intervals
 
-## 2) Tasks
-1. **Write a Summary**: Summarize the concept of "learning by doing" in 3-5 sentences.
-2. **Example Identification**: List three examples from your own experience where learning through exercises helped you understand a topic better.
-3. **Create an Exercise**: Design a simple exercise for a topic of your choice that someone else could use to practice.
-4. **Follow an Exercise**: Find an online tutorial that includes exercises and complete at least two of them.
-5. **Modify an Existing Exercise**: Take a basic problem from a textbook or online course and modify it to make it slightly more challenging.
-6. **Pair Learning**: Explain a concept to a partner and guide them through an exercise without giving direct answers.
-7. **Review Mistakes**: Look at an exercise you've previously completed incorrectly. Identify why the mistake happened and how to prevent it in the future.
-8. **Time Challenge**: Set a timer for 10 minutes and try to solve as many simple exercises as possible on a given topic.
-9. **Self-Assessment**: Create a checklist to evaluate your own performance in completing exercises effectively.
-10. **Reflect on Progress**: Write a short paragraph on how this structured approach to exercises has influenced your learning.
+With this configuration file in place, you can connect to a remote machine simply by typing `ssh myserver`, even if it uses a non-default port or key. This abstraction increases usability **without compromising security**—a hallmark of well-designed systems.
+
+The `~/.ssh/config` file has been part of OpenSSH since the early days of secure remote access, and its use is championed by seasoned engineers such as **Theo de Raadt** (OpenBSD) and **Bryan Cantrill** (ex-Sun Microsystems), who advocate for tools that help automate secure practice.
+
+Let’s explore how to write a good config file and use it to manage multiple connections with ease.
 
 <details>
-  <summary>Tip for Task 5</summary>
-  Try making small adjustments first, such as increasing the difficulty slightly or adding an extra constraint.
+  <summary>Fun Fact</summary>
+  Did you know that `.ssh/config` supports wildcard patterns, nested includes, and even conditional directives? For large teams or complex deployments, it becomes a tiny domain-specific language for secure access.
 </details>
 
+## 2) Tasks
+
+1. **Inspect Your SSH Directory**:
+   - Run `ls -la ~/.ssh` to check if a `config` file already exists.
+   - If not, create one with `touch ~/.ssh/config`.
+   - Set the correct permissions: `chmod 600 ~/.ssh/config`
+
+2. **Create a Simple Config Entry**:
+   Edit your `~/.ssh/config` file with your favorite editor (e.g. `vim ~/.ssh/config`) and add the following:
+
+   ```ssh-config
+   Host panda
+       HostName 192.168.178.24
+       User pandauser
+       Port 2234
+       IdentityFile ~/.ssh/id_ed25519
+   ```
+
+   Replace the values with those matching your server. Save the file.
+
+3. **Use Your Alias**:
+   Try connecting to your server simply by typing:
+
+   ```sh
+   ssh panda
+   ```
+
+   This should behave exactly like the longer command you used before.
+
+4. **Add Multiple Hosts**:
+   Add a second block for another host you frequently access. Optionally, give it a nickname like `labmachine`.
+
+5. **Use a Wildcard Entry**:
+   Add a default rule for all unknown hosts:
+
+   ```ssh-config
+   Host *
+       ServerAliveInterval 60
+       ServerAliveCountMax 3
+   ```
+
+6. **Verify Config Behavior**:
+   Use `ssh -v panda` to see the verbose output and confirm that your config file is being respected.
+
+7. **Include an Additional Config File**:
+   Create a sub-config file `~/.ssh/config.d/lab` and include it in your main config:
+
+   ```ssh-config
+   Include ~/.ssh/config.d/*
+   ```
+
+   Add a new host entry in `config.d/lab` and verify that it's being picked up.
+
+
 ## 3) Questions
-1. What are the main benefits of learning through exercises compared to passive learning?
-2. How do exercises improve long-term retention?
-3. Can you think of a subject where learning through exercises might be less effective? Why?
-4. What role does feedback play in learning through exercises?
-5. How can self-designed exercises improve understanding?
-6. Why is it beneficial to review past mistakes in exercises?
-7. How does explaining a concept to someone else reinforce your own understanding?
-8. What strategies can you use to stay motivated when practicing with exercises?
-9. How can timed challenges contribute to learning efficiency?
-10. How do exercises help bridge the gap between theory and practical application?
+
+1. What are the benefits of using the SSH config file over typing full commands?
+2. What permissions should your config file have and why?
+3. How does the SSH client decide which IdentityFile to use?
+4. What does the `Host *` wildcard mean, and when is it useful?
+5. What happens if two entries match the same host? Which one wins?
+
 
 ## 4) Advice
-Practice consistently and seek out diverse exercises that challenge different aspects of a topic. Combine exercises with reflection and feedback to maximize your learning efficiency. Don't hesitate to adapt exercises to fit your own needs and ensure that you're actively engaging with the material, rather than just going through the motions.
+Using a `~/.ssh/config` file is not just about comfort—it's about reproducibility and clarity. Document your access patterns like you would document your code. For complex systems, version-controlled SSH config files can be a game changer. Also, consider watching the ["SSH Tricks" talk by Julia Evans](https://www.youtube.com/watch?v=1z2xG_ZJwck), which covers many practical patterns.
+
+If you're curious how all this works under the hood, check out the OpenSSH source code, particularly the `readconf.c` file which implements config parsing.
 
