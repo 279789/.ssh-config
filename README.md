@@ -89,9 +89,9 @@ Let’s explore how to write a good config file and use it to manage multiple co
 
 1. What are the benefits of using the SSH config file over typing full commands? The main advantage is, that you don't have to type the whole command. You only have to type a small alias (would make sens to name it like your server.) Another advantage is, that you could use this file to document your SSH connections, so that you don't have to remember them.
 2. What permissions should your config file have and why? It shauld have the chmod 600 permission let's only read and write the user. Other have no permission. It's Improtant that only you could read and write, so that your privacy is kept.
-3. How does the SSH client decide which IdentityFile to use? 
-4. What does the `Host *` wildcard mean, and when is it useful?
-5. What happens if two entries match the same host? Which one wins?
+3. How does the SSH client decide which IdentityFile to use? It decides to use the Identity file, that is defined for the Host, that you're connecting to, because you declared it earlier.
+4. What does the `Host *` wildcard mean, and when is it useful? It's an default profile that's used, when there is a new or unknown host, it closes the session after 3 unsucessful attemps of checking the connection
+5. What happens if two entries match the same host? Which one wins? The first fitting rule wins.
 
 
 ## 4) Advice
